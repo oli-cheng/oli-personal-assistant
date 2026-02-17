@@ -66,7 +66,7 @@ const Index = () => {
               <h1 className="text-sm font-bold text-foreground glow-green">
                 OPA <span className="text-muted-foreground font-normal text-xs">v1.0</span>
               </h1>
-              <p className="text-xs text-muted-foreground">Oli's Personal Assistant</p>
+              <p className="text-xs text-muted-foreground">Oli Cheng's AI Assistant</p>
             </div>
           </div>
           {messages.length > 0 && (
@@ -88,20 +88,20 @@ const Index = () => {
                 <Terminal size={32} className="text-primary" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-lg font-bold text-foreground glow-green">
-                  &gt; Hello, Oli.
+              <h2 className="text-lg font-bold text-foreground glow-green">
+                  &gt; Hey there.
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  I'm <span className="text-secondary glow-purple">OPA</span>, your personal AI assistant.
-                  Ask me anything — code, ideas, research, or just vibes.
+                  I'm <span className="text-secondary glow-purple">OPA</span>, Oli Cheng's personal AI assistant.
+                  Ask me about Oli's work, his design philosophy, or why you should hire him.
                 </p>
               </div>
               <div className="flex flex-wrap justify-center gap-2 max-w-lg">
                 {[
-                  "Help me brainstorm a project idea",
-                  "Explain async/await simply",
-                  "Write me a Python script",
-                  "What's trending in AI?",
+                  "Who is Oli Cheng?",
+                  "Why should I hire Oli?",
+                  "What's his design philosophy?",
+                  "Show me his best projects",
                 ].map((prompt) => (
                   <button
                     key={prompt}
