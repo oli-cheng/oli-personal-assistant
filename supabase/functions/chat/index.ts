@@ -6,30 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { messages } = await req.json();
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
-
-    const response = await fetch(
-      "https://ai.gateway.lovable.dev/v1/chat/completions",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${LOVABLE_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "google/gemini-2.5-flash",
-          messages: [
-            {
-              role: "system",
-              content: `You are OPA — Oli's Personal Assistant. You are a public-facing AI assistant built by Oli Cheng to represent him professionally. Think of yourself as Oli's digital secretary/receptionist — warm, articulate, slightly witty, with deep knowledge about Oli and expert-level understanding of AI, product design, and engineering.
+const SYSTEM_PROMPT = `You are OPA — Oli's Personal Assistant. You are a public-facing AI assistant built by Oli Cheng to represent him professionally. Think of yourself as Oli's digital secretary/receptionist — warm, articulate, slightly witty, with deep knowledge about Oli and expert-level understanding of AI, product design, and engineering.
 
 YOUR PURPOSE:
 - Help visitors understand who Oli is, what he does, and why they should hire or work with him
@@ -54,16 +31,60 @@ TONE & STYLE:
 - When asked about AI/design philosophy, offer thoughtful, opinionated takes that reflect Oli's worldview
 - You ARE a demonstration of Oli's capabilities — mention this meta-layer when relevant ("I'm actually an example of what Oli builds")
 - If asked something you don't know about Oli, say so honestly and suggest they reach out directly at hi@olicheng.com
-- Keep responses concise but rich. No fluff.`,
-            },
-            ...messages,
-          ],
-          stream: true,
-        }),
-      }
-    );
+- Keep responses concise but rich. No fluff.`;
 
-    if (!response.ok) {
+const MODELS = [
+  "google/gemini-2.5-flash",
+  "openai/gpt-5-mini",
+  "google/gemini-2.5-flash-lite",
+];
+
+async function tryModel(model: string, messages: unknown[], apiKey: string) {
+  return await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model,
+      messages: [{ role: "system", content: SYSTEM_PROMPT }, ...messages],
+      stream: true,
+    }),
+  });
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  try {
+    const { messages } = await req.json();
+    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
+    if (!LOVABLE_API_KEY) {
+      console.error("LOVABLE_API_KEY is not set");
+      throw new Error("LOVABLE_API_KEY is not configured");
+    }
+
+    console.log("API key present, length:", LOVABLE_API_KEY.length);
+
+    let lastError = "";
+    for (const model of MODELS) {
+      console.log("Trying model:", model);
+      const response = await tryModel(model, messages, LOVABLE_API_KEY);
+
+      if (response.ok) {
+        console.log("Success with model:", model);
+        return new Response(response.body, {
+          headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
+        });
+      }
+
+      const bodyText = await response.text();
+      lastError = bodyText;
+      console.error(`Model ${model} failed with status ${response.status}:`, bodyText);
+
       if (response.status === 429) {
         return new Response(
           JSON.stringify({ error: "Rate limited. Try again in a moment." }),
@@ -76,17 +97,14 @@ TONE & STYLE:
           { status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-      const t = await response.text();
-      console.error("AI gateway error:", response.status, t);
-      return new Response(
-        JSON.stringify({ error: "AI gateway error" }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
+      // For 5xx errors, try the next model
     }
 
-    return new Response(response.body, {
-      headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
-    });
+    console.error("All models failed. Last error:", lastError);
+    return new Response(
+      JSON.stringify({ error: "AI gateway error — all models failed." }),
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+    );
   } catch (e) {
     console.error("chat error:", e);
     return new Response(
