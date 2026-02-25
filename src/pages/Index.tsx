@@ -1,14 +1,19 @@
 import { useState, useRef, useEffect } from "react";
-import { Terminal, Trash2 } from "lucide-react";
+import { Terminal, Trash2, PanelRightOpen, PanelRightClose } from "lucide-react";
 import ChatMessage from "@/components/ChatMessage";
 import ChatInput from "@/components/ChatInput";
+import ProfileSidebar from "@/components/ProfileSidebar";
 import { streamChat, type Msg } from "@/lib/streamChat";
 import { toast } from "sonner";
+import { useIsMobile } from "@/hooks/use-mobile";
+import opaGreeting from "@/assets/opa-greeting.png";
 
 const Index = () => {
   const [messages, setMessages] = useState<Msg[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [showSidebar, setShowSidebar] = useState(true);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -55,44 +60,55 @@ const Index = () => {
       <div className="fixed inset-0 scanline z-50" />
 
       {/* Main chat area */}
-      <div className="flex-1 flex flex-col max-w-3xl mx-auto w-full">
+      <div className="flex-1 flex flex-col min-w-0">
         {/* Header */}
         <header className="flex items-center justify-between px-4 py-3 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-lg bg-primary/20 flex items-center justify-center glow-green-box">
-              <Terminal size={18} className="text-primary" />
+            <div className="w-9 h-9 rounded-lg overflow-hidden glow-green-box">
+              <img src={opaGreeting} alt="Opa" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="text-sm font-bold text-foreground glow-green">
-                OPA <span className="text-muted-foreground font-normal text-xs">v1.0</span>
+                Opa <span className="text-muted-foreground font-normal text-xs">v1.0</span>
               </h1>
               <p className="text-xs text-muted-foreground">Oli Cheng's AI Assistant</p>
             </div>
           </div>
-          {messages.length > 0 && (
-            <button
-              onClick={() => setMessages([])}
-              className="text-muted-foreground hover:text-destructive transition-colors p-2 rounded-md hover:bg-muted"
-              title="Clear chat"
-            >
-              <Trash2 size={16} />
-            </button>
-          )}
+          <div className="flex items-center gap-1">
+            {messages.length > 0 && (
+              <button
+                onClick={() => setMessages([])}
+                className="text-muted-foreground hover:text-destructive transition-colors p-2 rounded-md hover:bg-muted"
+                title="Clear chat"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+            {!isMobile && (
+              <button
+                onClick={() => setShowSidebar(!showSidebar)}
+                className="text-muted-foreground hover:text-foreground transition-colors p-2 rounded-md hover:bg-muted"
+                title={showSidebar ? "Hide profile" : "Show profile"}
+              >
+                {showSidebar ? <PanelRightClose size={16} /> : <PanelRightOpen size={16} />}
+              </button>
+            )}
+          </div>
         </header>
 
         {/* Messages */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto px-4 py-6 space-y-6">
           {messages.length === 0 && (
             <div className="flex-1 flex flex-col items-center justify-center h-full text-center space-y-6">
-              <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center glow-green-box">
-                <Terminal size={32} className="text-primary" />
+              <div className="w-20 h-20 rounded-2xl overflow-hidden glow-green-box border-2 border-primary/20">
+                <img src={opaGreeting} alt="Opa waving" className="w-full h-full object-cover" />
               </div>
               <div className="space-y-2">
-              <h2 className="text-lg font-bold text-foreground glow-green">
-                  &gt; Hey there.
+                <h2 className="text-lg font-bold text-foreground glow-green">
+                  &gt; Hey there! 👋
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-md">
-                  I'm <span className="text-secondary glow-purple">OPA</span>, Oli Cheng's personal AI assistant.
+                  I'm <span className="text-secondary glow-purple">Opa</span>, Oli Cheng's personal AI assistant.
                   Ask me about Oli's work, his design philosophy, or why you should hire him.
                 </p>
               </div>
@@ -119,8 +135,8 @@ const Index = () => {
           ))}
           {isLoading && messages[messages.length - 1]?.role === "user" && (
             <div className="flex gap-3 animate-fade-in">
-              <div className="w-8 h-8 rounded-md bg-primary/20 flex items-center justify-center glow-green-box">
-                <Terminal size={16} className="text-primary" />
+              <div className="w-8 h-8 rounded-md overflow-hidden glow-green-box">
+                <img src={opaGreeting} alt="Opa thinking" className="w-full h-full object-cover animate-pulse" />
               </div>
               <div className="bg-card border border-border rounded-lg px-4 py-3">
                 <span className="text-primary animate-blink">▌</span>
@@ -133,10 +149,13 @@ const Index = () => {
         <div className="px-4 pb-4 pt-2">
           <ChatInput onSend={handleSend} disabled={isLoading} />
           <p className="text-center text-[10px] text-muted-foreground mt-2 opacity-60">
-            OPA is powered by AI. Responses may not always be accurate.
+            Opa is powered by AI. Responses may not always be accurate.
           </p>
         </div>
       </div>
+
+      {/* Profile sidebar */}
+      {showSidebar && <ProfileSidebar />}
     </div>
   );
 };
