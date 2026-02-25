@@ -99,4 +99,57 @@
     );
     pointer-events: none;
   }
+
+  /* Tamagotchi-style animations */
+  .animate-breathe {
+    animation: breathe 3s ease-in-out infinite;
+  }
+  .animate-float-1 {
+    animation: float1 4s ease-in-out infinite;
+  }
+  .animate-float-2 {
+    animation: float2 5s ease-in-out infinite;
+  }
+  .animate-float-3 {
+    animation: float3 6s ease-in-out infinite;
+  }
+  .animate-ping-slow {
+    animation: ping-slow 2s ease-in-out infinite;
+  }
+  .animate-bounce-small {
+    animation: bounce-small 0.4s ease-in-out;
+  }
+  .delay-500 {
+    animation-delay: 500ms;
+  }
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes float1 {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.3; }
+  50% { transform: translateY(-20px) translateX(10px); opacity: 0.7; }
+}
+
+@keyframes float2 {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
+  50% { transform: translateY(-15px) translateX(-8px); opacity: 0.6; }
+}
+
+@keyframes float3 {
+  0%, 100% { transform: translateY(0) translateX(0); opacity: 0.2; }
+  50% { transform: translateY(-25px) translateX(5px); opacity: 0.5; }
+}
+
+@keyframes ping-slow {
+  0%, 100% { opacity: 0.4; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+@keyframes bounce-small {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
